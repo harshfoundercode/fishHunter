@@ -1,4 +1,5 @@
 import 'package:fish_game/tester/game_screen.dart';
+import 'package:fish_game/tester/game_screen_2.dart' show SniperGame2;
 import 'package:flutter/material.dart';
 import 'fish_game_new.dart';
 import 'generated/assets.dart' show Assets;
@@ -97,7 +98,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   MaterialPageRoute(
                     builder: (context) =>
                         // FishGameScreenNew(level: 1),
-                    SniperScreen(),
+                    // SniperScreen(),
+                    SniperGame2(),
                   ),
                 );
               },

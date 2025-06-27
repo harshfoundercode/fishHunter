@@ -5,6 +5,7 @@ class Assets {
   static const String audioBlastsound = 'assets/audio/blastsound.mp3';
   static const String audioCoin = 'assets/audio/coin.mp3';
   static const String audioMusic = 'assets/audio/music.mp3';
+  static const String audioNetActive = 'assets/audio/net_active.ogg';
   static const String imagesBG = 'assets/images/BG.jpg';
   static const String imagesBg2 = 'assets/images/bg2.png';
   static const String imagesBg3 = 'assets/images/bg3.png';
@@ -21,6 +22,8 @@ class Assets {
   static const String imagesFish7 = 'assets/images/fish7.gif';
   static const String imagesFish8 = 'assets/images/fish8.gif';
   static const String imagesGiphy = 'assets/images/giphy.gif';
+  static const String imagesHeader = 'assets/images/header.png';
   static const String imagesMissile = 'assets/images/missile.png';
+  static const String imagesNet = 'assets/images/net.png';
 
 }

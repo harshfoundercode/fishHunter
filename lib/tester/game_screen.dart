@@ -465,6 +465,8 @@ import 'dart:async';
 import 'dart:math';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:confetti/confetti.dart';
+import 'package:fish_game/generated/assets.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 enum SpawnSide { left, right }
@@ -475,8 +477,9 @@ class Fish {
   double speed;
   bool isHit;
   Offset direction;
+  bool isFrozen; // Add this
   Fish(this.position, this.imageUrl, this.speed,
-      {this.isHit = false, required this.direction});
+      {this.isHit = false, required this.direction,this.isFrozen = false,});
 }
 
 class Missile {
@@ -497,8 +500,7 @@ class SniperScreen extends StatefulWidget {
   State<SniperScreen> createState() => _SniperScreenState();
 }
 
-class _SniperScreenState extends State<SniperScreen>
-    with TickerProviderStateMixin {
+class _SniperScreenState extends State<SniperScreen> with TickerProviderStateMixin {
   final AudioPlayer _audioPlayer = AudioPlayer();
   final AudioPlayer _bgMusicPlayer = AudioPlayer();
 
@@ -507,11 +509,17 @@ class _SniperScreenState extends State<SniperScreen>
   List<Missile> missiles = [];
   Timer? fishTimer;
   Timer? gameLoop;
+  // Timer? levelTimer;
   Random random = Random();
   int score = 0;
 
+  int timeLeft = 60;
+  Timer? countdownTimer;
   int level = 1;
-  int scoreToLevelUp = 10;
+  int requiredScore = 60;
+  Timer? levelTimer;
+
+
   DateTime levelStartTime = DateTime.now();
   Duration levelDuration = Duration(seconds: 30);
 
@@ -550,6 +558,7 @@ class _SniperScreenState extends State<SniperScreen>
   String backgroundUrl = 'assets/images/BG.jpg';
   String coinImage = 'assets/images/coins.png';
 
+
   @override
   void initState() {
     super.initState();
@@ -565,6 +574,95 @@ class _SniperScreenState extends State<SniperScreen>
     _playBackgroundMusic();
     _startSpawning();
     _startGameLoop();
+    _startLevelTimer();
+  }
+  void _startLevelTimer() {
+    timeLeft = 60; // Reset timer for new level
+    levelTimer?.cancel();
+    countdownTimer?.cancel();
+
+    // Update the countdown display every second
+    countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        timeLeft--;
+      });
+
+      if (timeLeft <= 0) {
+        timer.cancel();
+        _checkLevelCompletion();
+      }
+    });
+
+    // This is the actual level timer (60s)
+    levelTimer = Timer(Duration(seconds: 60), _checkLevelCompletion);
+  }
+
+  // New method to check level completion
+  void _checkLevelCompletion() {
+    if (score >= requiredScore) {
+      _showLevelComplete();
+    } else {
+      _showGameOver();
+    }
+  }
+  void _showLevelComplete() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: Text('🎉 Level $level Complete!'),
+        content: Text('Great job! Moving to next level.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                level++;
+                requiredScore += 10; // Increase by 10 for next level
+                score = 0; // Reset score for new level
+                _startLevelTimer(); // Start new level timer
+                _startSpawning(); // Reset fish spawning
+              });
+            },
+            child: Text('Next'),
+          )
+        ],
+      ),
+    );
+  }
+
+  void _showGameOver() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: Text('💀 Game Over'),
+        content: Text('You didn\'t reach the required score.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: Text('Exit'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                // Restart same level
+                score = 0;
+                timeLeft = 60;
+                _startLevelTimer();
+                _startSpawning();
+              });
+            },
+            child: Text('Retry'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _playBackgroundMusic() async {
@@ -645,39 +743,42 @@ class _SniperScreenState extends State<SniperScreen>
   }
 
   void _blastFish(Fish fish) {
-    fish.isHit = true;
-    coinPosition = fish.position;
-    showCoin = true;
-    aimPoint = null;
+    setState(() {
+      fish.isHit = true;
+      coinPosition = fish.position;
+      showCoin = true;
+      aimPoint = null;
 
-    final tween = Tween<Offset>(begin: coinPosition!, end: walletPosition);
-    _flyCoinAnimation = tween.animate(CurvedAnimation(parent: _flyCoinController, curve: Curves.easeInOut));
-    _flyCoinController.forward(from: 0);
+      final tween = Tween<Offset>(begin: coinPosition!, end: walletPosition);
+      _flyCoinAnimation = tween.animate(CurvedAnimation(parent: _flyCoinController, curve: Curves.easeInOut));
+      _flyCoinController.forward(from: 0);
 
-    if (isSoundOn) {
-      _audioPlayer.play(AssetSource('audio/blastsound.mp3'));
-    }
+      if (isSoundOn) {
+        _audioPlayer.play(AssetSource('audio/blastsound.mp3'));
+      }
 
-    score++;
+      score++;
 
-    bool shouldLevelUp = false;
-    if (score % scoreToLevelUp == 0) shouldLevelUp = true;
-    if (DateTime.now().difference(levelStartTime) > levelDuration) shouldLevelUp = true;
+      bool shouldLevelUp = false;
+      if (score % requiredScore == 0) shouldLevelUp = true;
+      if (DateTime.now().difference(levelStartTime) > levelDuration) shouldLevelUp = true;
 
-    if (shouldLevelUp) {
-      level++;
-      levelStartTime = DateTime.now();
-      _showLevelUpPopup();
-      _startSpawning();
-    }
+      if (shouldLevelUp) {
+        level++;
+        levelStartTime = DateTime.now();
+        _showLevelUpPopup();
+        _startSpawning();
+      }
 
-    Future.delayed(Duration(milliseconds: 600), () {
-      setState(() {
-        leftFishes.removeWhere((f) => f.isHit);
-        rightFishes.removeWhere((f) => f.isHit);
-        showCoin = false;
+      Future.delayed(Duration(milliseconds: 300), () {
+        setState(() {
+          leftFishes.removeWhere((f) => f.isHit);
+          rightFishes.removeWhere((f) => f.isHit);
+          showCoin = false;
+        });
       });
     });
+
   }
 
   void _showLevelUpPopup() {
@@ -688,14 +789,64 @@ class _SniperScreenState extends State<SniperScreen>
     });
   }
 
+  // void _handleFishTap(Offset tapPosition) {
+  //   for (var fish in [...leftFishes, ...rightFishes]) {
+  //     if (!fish.isHit && (fish.position - tapPosition).distance < 30) {
+  //       _blastFish(fish);
+  //       break;
+  //     }
+  //
+  //   }
+  // }
   void _handleFishTap(Offset tapPosition) {
     for (var fish in [...leftFishes, ...rightFishes]) {
       if (!fish.isHit && (fish.position - tapPosition).distance < 30) {
-        _blastFish(fish);
+        setState(() {
+          fish.isHit = true;
+          coinPosition = fish.position;
+          showCoin = true;
+
+          final tween = Tween<Offset>(
+            begin: coinPosition!,
+            end: walletPosition,
+          );
+          _flyCoinAnimation = tween.animate(
+            CurvedAnimation(
+              parent: _flyCoinController,
+              curve: Curves.easeInOut,
+            ),
+          );
+          _flyCoinController.forward(from: 0);
+          aimPoint = null;
+          score++;
+
+          // Play sound
+          if (isSoundOn) {
+            _audioPlayer.play(AssetSource('audio/blastsound.mp3'));
+          }
+
+          // Remove fish after delay
+          Future.delayed(Duration(milliseconds: 100), () {
+            setState(() {
+              leftFishes.removeWhere((f) => f.isHit);
+              rightFishes.removeWhere((f) => f.isHit);
+            });
+          });
+
+        });
+
+        // Hide coin after animation ends
+        Future.delayed(Duration(milliseconds: 1000), () {
+          setState(() {
+            showCoin = false;
+          });
+        });
+
         break;
       }
     }
   }
+
 
   void _fireMissile(Offset target) {
     final start = Offset(
@@ -719,21 +870,56 @@ class _SniperScreenState extends State<SniperScreen>
     return atan2(dy, dx);
   }
 
+
+    void _playMusic() async {
+      if (isMusicOn) {
+        await _bgMusicPlayer.play(AssetSource('audio/music.mp3'));
+        _bgMusicPlayer.setReleaseMode(ReleaseMode.loop);
+      }
+    }
+
   void _togglePause() {
     setState(() {
       isPaused = !isPaused;
+      if (isPaused) {
+        _bgMusicPlayer.pause();
+      } else {
+        if (isMusicOn) _bgMusicPlayer.resume();
+      }
     });
+  }
+
+  void _toggleSound() {
+    setState(() {
+      isSoundOn = !isSoundOn;
+    });
+  }
+
+  void _toggleMusic() {
+    setState(() {
+      isMusicOn = !isMusicOn;
+      if (isMusicOn) {
+        _playMusic();
+      } else {
+        _bgMusicPlayer.pause();
+      }
+    });
+  }
+
+  void _exitGame() {
+    Navigator.of(context).pop();
   }
 
   @override
   void dispose() {
     fishTimer?.cancel();
     gameLoop?.cancel();
+    levelTimer?.cancel();
     _audioPlayer.dispose();
     _bgMusicPlayer.dispose();
     _coinController.dispose();
     _flyCoinController.dispose();
-    _confettiController.dispose();
+    countdownTimer?.cancel();
     super.dispose();
   }
 
@@ -756,15 +942,16 @@ class _SniperScreenState extends State<SniperScreen>
         if (!isPaused) {
           final tap = details.localPosition;
           aimPoint = tap;
-          _fireMissile(tap);
-          _handleFishTap(tap);
+          _handleFishTap(tap); // first blast check
+          _fireMissile(tap);   // then shoot
         }
       },
+
       child: Scaffold(
         body: Stack(
           children: [
             Positioned.fill(
-              child: Image.asset(backgroundUrl, fit: BoxFit.cover),
+              child: Image.asset(Assets.imagesBg3, fit: BoxFit.cover),
             ),
 
             ...leftFishes.map((fish) => Positioned(
@@ -801,22 +988,21 @@ class _SniperScreenState extends State<SniperScreen>
                 child: Container(),
               ),
 
-            // ...missiles.map((m) => Positioned(
-            //   left: m.position.dx,
-            //   top: m.position.dy,
-            //   child: Image.asset(missileUrl, height: 30),
-            // )),
-
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Image.asset(
-                missileUrl,
-                height: 100,
+            Positioned(
+              bottom: -50,
+              left: 45,
+              right: 45,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Image.asset(
+                  missileUrl,
+                  height: 100,
+                ),
               ),
             ),
 
             Positioned(
-              top: 30,
+              top: 10,
               left: 20,
               child: Row(
                 children: [
@@ -836,7 +1022,7 @@ class _SniperScreenState extends State<SniperScreen>
             ),
 
             Positioned(
-              top: 30,
+              top: 10,
               left: 150,
               child: Text(
                 'Level: $level',
@@ -848,88 +1034,69 @@ class _SniperScreenState extends State<SniperScreen>
                 ),
               ),
             ),
-
-            if (showLevelPopup)
-              Center(
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    ConfettiWidget(
-                      confettiController: _confettiController,
-                      blastDirectionality: BlastDirectionality.explosive,
-                      shouldLoop: false,
-                      colors: [Colors.yellow, Colors.green, Colors.pink, Colors.blue],
-                    ),
-                    Container(
-                      padding: EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.black87,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '🎉 Congratulations!',
-                            style: TextStyle(fontSize: 24, color: Colors.white),
-                          ),
-                          Text(
-                            'Level $level Unlocked',
-                            style: TextStyle(fontSize: 20, color: Colors.white),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+            // ⏱ Timer Display
+            Positioned(
+              top: 10,
+              left: 300,
+              child: AnimatedDefaultTextStyle(
+                duration: Duration(milliseconds: 500),
+                style: TextStyle(
+                  fontSize: 24,
+                  color: timeLeft <= 10 ? Colors.red : Colors.white,
+                  fontWeight: FontWeight.bold,
+                  shadows: [Shadow(blurRadius: 8, color: Colors.black)],
                 ),
+                child: Text('⏱ $timeLeft s'),
               ),
+            ),
+
 
             Positioned(
-              top: 30,
+              top: 1,
               right: 20,
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      isPaused ? Icons.play_arrow : Icons.pause,
-                      color: Colors.white,
-                    ),
-                    onPressed: _togglePause,
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      isMusicOn ? Icons.music_note : Icons.music_off,
-                      color: Colors.white,
-                    ),
-                    onPressed: () {
-                      setState(() => isMusicOn = !isMusicOn);
-                      isMusicOn
-                          ? _playBackgroundMusic()
-                          : _bgMusicPlayer.stop();
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      isSoundOn ? Icons.volume_up : Icons.volume_off,
-                      color: Colors.white,
-                    ),
-                    onPressed: () {
-                      setState(() => isSoundOn = !isSoundOn);
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.close, color: Colors.white),
-                    onPressed: () {
-                      _bgMusicPlayer.stop();
-                      Navigator.pop(context);
-                    },
-                  ),
-                ],
-              ),
+              child: actionButton()
             ),
           ],
         ),
       ),
+    );
+  }
+  Widget actionButton(){
+    return Row(
+      children: [
+        IconButton(
+          icon: Icon(
+            isSoundOn ? Icons.volume_up : Icons.volume_off,
+            color: Colors.white,
+            size: 30,
+          ),
+          onPressed: _toggleSound,
+        ),
+        IconButton(
+          icon: Icon(
+            isMusicOn ? Icons.music_note : Icons.music_off,
+            color: Colors.white,
+            size: 30,
+          ),
+          onPressed: _toggleMusic,
+        ),
+        IconButton(
+          icon: Icon(
+            isPaused ? Icons.play_arrow : Icons.pause,
+            color: Colors.white,
+            size: 30,
+          ),
+          onPressed: _togglePause,
+        ),
+        IconButton(
+          icon: Icon(
+            Icons.exit_to_app,
+            color: Colors.white,
+            size: 30,
+          ),
+          onPressed: _exitGame,
+        ),
+      ],
     );
   }
 }
