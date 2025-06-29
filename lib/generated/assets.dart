@@ -9,11 +9,17 @@ class Assets {
   static const String imagesBG = 'assets/images/BG.jpg';
   static const String imagesBg2 = 'assets/images/bg2.png';
   static const String imagesBg3 = 'assets/images/bg3.png';
+  static const String imagesBg4 = 'assets/images/bg4.gif';
+  static const String imagesBg5 = 'assets/images/bg5.gif';
   static const String imagesBlast = 'assets/images/blast.gif';
   static const String imagesCoins = 'assets/images/coins.png';
   static const String imagesFish1 = 'assets/images/fish1.png';
   static const String imagesFish11 = 'assets/images/fish11.gif';
   static const String imagesFish12 = 'assets/images/fish12.gif';
+  static const String imagesFish13 = 'assets/images/fish13.gif';
+  static const String imagesFish14 = 'assets/images/fish14.gif';
+  static const String imagesFish15 = 'assets/images/fish15.gif';
+  static const String imagesFish16 = 'assets/images/fish16.gif';
   static const String imagesFish2 = 'assets/images/fish2.png';
   static const String imagesFish3 = 'assets/images/fish3.png';
   static const String imagesFish4 = 'assets/images/fish4.png';
@@ -21,9 +27,20 @@ class Assets {
   static const String imagesFish6 = 'assets/images/fish6.gif';
   static const String imagesFish7 = 'assets/images/fish7.gif';
   static const String imagesFish8 = 'assets/images/fish8.gif';
+  static const String imagesGamepause = 'assets/images/gamepause.jpg';
   static const String imagesGiphy = 'assets/images/giphy.gif';
   static const String imagesHeader = 'assets/images/header.png';
+  static const String imagesLevel = 'assets/images/level.png';
+  static const String imagesMenu = 'assets/images/menu.png';
   static const String imagesMissile = 'assets/images/missile.png';
+  static const String imagesMusicoff = 'assets/images/musicoff.png';
+  static const String imagesMusicon = 'assets/images/musicon.png';
   static const String imagesNet = 'assets/images/net.png';
+  static const String imagesPause = 'assets/images/pause.png';
+  static const String imagesScore = 'assets/images/score.png';
+  static const String imagesSparkle = 'assets/images/sparkle.gif';
+  static const String imagesTimer = 'assets/images/timer.png';
+  static const String imagesVolumeof = 'assets/images/volumeof.png';
+  static const String imagesVolumeon = 'assets/images/volumeon.png';
 
 }

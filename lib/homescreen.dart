@@ -1,3 +1,7 @@
+import 'dart:math';
+
+import 'package:fish_game/sniper_game/level_screen.dart';
+import 'package:fish_game/sniper_game/sniper_game_screen.dart' show SniperGameScreen;
 import 'package:fish_game/tester/game_screen.dart';
 import 'package:fish_game/tester/game_screen_2.dart' show SniperGame2;
 import 'package:flutter/material.dart';
@@ -21,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
         height: double.infinity,
         width: double.infinity,
         decoration: BoxDecoration(
-            image: DecorationImage(image: AssetImage('assets/images/bg3.png'),fit: BoxFit.fill)
+            image: DecorationImage(image: AssetImage('assets/images/bg4.gif'),fit: BoxFit.fill)
         ),
         child:  Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -44,38 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
             SizedBox(height: 40),
             Image.asset('assets/images/fish6.gif', width: 150),
             SizedBox(height: 20),
-            // Container(
-            //   width: 400,
-            //   height: 130,
-            //   child: GridView.builder(
-            //     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            //       crossAxisCount: 3, // 3 columns
-            //       childAspectRatio: 3, // Square buttons
-            //       crossAxisSpacing: 15,
-            //       mainAxisSpacing: 15,
-            //     ),
-            //     itemCount: _totalLevels,
-            //     itemBuilder: (context, index) {
-            //       int level = index + 1;
-            //       bool isLocked = level > 5; // First 5 levels unlocked
-            //
-            //       return LevelButton(
-            //         level: level,
-            //         isLocked: isLocked,
-            //         onPressed: () {
-            //           if (!isLocked) {
-            //             Navigator.push(
-            //               context,
-            //               MaterialPageRoute(
-            //                 builder: (context) => FishGameScreenNew(level: level),
-            //               ),
-            //             );
-            //           }
-            //         },
-            //       );
-            //     },
-            //   ),
-            // ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
@@ -92,23 +64,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: Colors.white,
                 ),
               ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        // FishGameScreenNew(level: 1),
-                    // SniperScreen(),
-                    SniperGame2(),
-                  ),
-                );
+              onPressed: () async {
+                showDialog(context: context, builder: (context)=>LevelSelectScreen());
               },
             ),
           ],
         ),
       )
-
-
     );
   }
 }

@@ -30,7 +30,7 @@ class _SplashScreenState extends State<SplashScreen> {
         height: double.infinity,
         width: double.infinity,
         decoration: BoxDecoration(
-          image: DecorationImage(image: AssetImage('assets/images/bg3.png'),fit: BoxFit.fill)
+          image: DecorationImage(image: AssetImage('assets/images/bg4.gif'),fit: BoxFit.fill)
         ),
         child: Center(
           child: Column(
