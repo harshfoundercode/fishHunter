@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:fish_game/main.dart';
 import 'package:fish_game/sniper_game/components/coin_animation_widget.dart'
     show CoinAnimationWidget;
 import 'package:fish_game/sniper_game/components/fish_widget.dart';
 import 'package:fish_game/sniper_game/components/missile_widget.dart'
     show MissileWidget;
-import 'package:fish_game/sniper_game/helper/audio_helper.dart';
 import 'package:fish_game/sniper_game/model/coin_animation.dart';
 import 'package:fish_game/sniper_game/model/fish_model.dart' show Fish;
 import 'package:fish_game/sniper_game/model/missile_model.dart' show Missile;
@@ -16,6 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart' show SharedPreferenc
 class GameController {
   final BuildContext context;
   final TickerProvider ticker;
+
   late double walletX, walletY;
 
   GameController(this.context, this.ticker, int startLevel);
@@ -26,11 +28,13 @@ class GameController {
   final blastGif = 'assets/images/blast.gif';
   final missileAsset = 'assets/images/missile.png';
   final coinAsset = 'assets/images/coins.png';
-  final bgAsset = 'assets/images/bg4.gif';
+  final bgAsset = 'assets/images/bg6.gif';
   final netAsset = 'assets/images/net.png';
   final soundNet = 'audio/net_active.ogg';
   final soundCoin = 'audio/coin.mp3';
   final musicAsset = 'audio/music.mp3';
+  String coinImage = 'assets/images/coins.png';
+
 
   // State
   final List<Fish> leftFishes = [];
@@ -39,65 +43,15 @@ class GameController {
   final List<Net> nets = [];
   final List<CoinAnimation> coinAnimations = [];
   int score = 0, level = 1, requiredScore = 0, timeLeft = 0;
-  bool isPaused = false,
-      isSoundOn = true,
-      isMusicOn = true,
-      magnetAvailable = false,
-      isMagnetActive = false;
+  bool isPaused = false;
+  bool isSoundOn = true;
+  bool isMusicOn = true;
+  bool  magnetAvailable = false;
+  bool  isMagnetActive = false;
   Offset? missileTarget;
   final random = Random();
   Timer? fishTimer, loopTimer, levelTimer;
-  final audio = AudioHelper();
-
-  // Level configs
-  // final List<Map<String, dynamic>> levelConfigs = [
-  //   {'score': 10, 'time': 30, 'fishTarget': {}},
-  //   {
-  //     'score': 20,
-  //     'time': 35,
-  //     'fishTarget': {'fish14.gif': 5},
-  //   },
-  //   {
-  //     'score': 30,
-  //     'time': 40,
-  //     'fishTarget': {'fish13.gif': 2, 'fish15.gif': 3},
-  //   },
-  //   {
-  //     'score': 40,
-  //     'time': 45,
-  //     'fishTarget': {'fish16.gif': 4},
-  //   },
-  //   {
-  //     'score': 50,
-  //     'time': 50,
-  //     'fishTarget': {'fish13.gif': 3, 'fish14.gif': 3},
-  //   },
-  //   {
-  //     'score': 60,
-  //     'time': 55,
-  //     'fishTarget': {'fish15.gif': 5},
-  //   },
-  //   {
-  //     'score': 70,
-  //     'time': 60,
-  //     'fishTarget': {'fish16.gif': 6},
-  //   },
-  //   {
-  //     'score': 80,
-  //     'time': 65,
-  //     'fishTarget': {'fish13.gif': 4, 'fish14.gif': 4},
-  //   },
-  //   {
-  //     'score': 90,
-  //     'time': 70,
-  //     'fishTarget': {'fish15.gif': 6},
-  //   },
-  //   {
-  //     'score': 100,
-  //     'time': 75,
-  //     'fishTarget': {'fish16.gif': 7},
-  //   },
-  // ];
+  final AudioPlayer audio = AudioPlayer();
 
   static final List<Map<String, dynamic>> levelConfigs = [
     {'score': 10, 'time': 30, 'fishTarget': {}},
@@ -120,7 +74,7 @@ class GameController {
     walletX = 7;
     walletY = 7;
     _loadLevelConfig();
-    if (isMusicOn) audio.playBackgroundMusic(musicAsset);
+    if (isMusicOn) audio.play(AssetSource('audio/music.mp3'));
     _startSpawning();
     _startLoop();
     _startLevelTimer();
@@ -219,7 +173,8 @@ class GameController {
     final mag = diff.distance;
     missiles.add(Missile(position: start, velocity: diff / mag * 10));
     missileTarget = target;
-    if (isSoundOn) audio.playSoundEffect(soundNet);
+    if (isSoundOn) audio.play(AssetSource(soundNet));
+
   }
 
   void _updateMissiles() {
@@ -230,7 +185,7 @@ class GameController {
         if ((m.position - missileTarget!).distance < 10) {
           m.hasReachedTarget = true;
           _triggerNetBlast(missileTarget!);
-          nets.add(Net(center: missileTarget!, radius: 100));
+          // nets.add(Net(center: missileTarget!, radius: 100));
         }
       }
     }
@@ -238,7 +193,7 @@ class GameController {
   }
 
   void _triggerNetBlast(Offset pos) {
-    if (isSoundOn) audio.playSoundEffect(soundNet);
+    if (isSoundOn) audio. play(AssetSource(soundNet));
     final inside = [
       ...leftFishes,
       ...rightFishes,
@@ -250,14 +205,14 @@ class GameController {
     nets.add(net);
 
     Timer(Duration(milliseconds: 500), () {
-      if (isSoundOn) audio.playSoundEffect(soundCoin);
+      if (isSoundOn) audio.play(AssetSource('audio/coin.mp3'));
       for (var f in inside) {
         f.isHit = true;
         final name = f.imageUrl.split('/').last;
         fishCollected[name] = (fishCollected[name] ?? 0) + 1;
         _spawnCoinAnim(f.position, 0);
-        nets.remove(net);
       }
+      nets.remove(net);
       score += inside.length;
       leftFishes.removeWhere((f) => inside.contains(f));
       rightFishes.removeWhere((f) => inside.contains(f));
@@ -280,43 +235,6 @@ class GameController {
       _showDialog('🎉 Level $level Complete!', 'Next', _nextLevel);
     }
   }
-
-  // void _spawnCoinAnim(Offset pos, int delay, {VoidCallback ? onComplete}) {
-  //   final ctrl = AnimationController(
-  //     vsync: ticker,
-  //     duration: Duration(milliseconds: 1500 + random.nextInt(500)),
-  //   );
-  //   final anim = Tween<Offset>(
-  //     begin: pos,
-  //     end: Offset(walletX, walletY),
-  //   ).animate(CurvedAnimation(parent: ctrl, curve: Curves.easeInOutBack));
-  //   final rot = Tween<double>(
-  //     begin: 0,
-  //     end: 2 * pi,
-  //   ).animate(CurvedAnimation(parent: ctrl, curve: Curves.linear));
-  //   final sc = Tween<double>(
-  //     begin: 0.8,
-  //     end: 1.2,
-  //   ).animate(CurvedAnimation(parent: ctrl, curve: Curves.easeInOut));
-  //   final ca = CoinAnimation(
-  //     controller: ctrl,
-  //     animation: anim,
-  //     rotation: rot,
-  //     scale: sc,
-  //     start: pos,
-  //   );
-  //   coinAnimations.add(ca);
-  //   Future.delayed(Duration(milliseconds: delay), () {
-  //     if (isSoundOn) audio.playSoundEffect(soundCoin);
-  //     ctrl.forward();
-  //   });
-  //   ctrl.addStatusListener((s) {
-  //     if (s == AnimationStatus.completed) {
-  //       coinAnimations.remove(ca);
-  //       ctrl.dispose();
-  //     }
-  //   });
-  // }
 
   void _spawnCoinAnim(Offset pos, int delay) {
     final ctrl = AnimationController(
@@ -350,7 +268,7 @@ class GameController {
     coinAnimations.add(ca);
 
     Future.delayed(Duration(milliseconds: delay), () {
-      if (isSoundOn) audio.playSoundEffect(soundCoin);
+      // if (isSoundOn) audio.playSoundEffect(soundCoin);
       ctrl.forward();
     });
 
@@ -362,16 +280,21 @@ class GameController {
       }
     });
   }
+  bool magnetUsed = false;
 
 
   void _triggerMagnetUnlock() {
-    if (score >= 20 && !magnetAvailable) magnetAvailable = true;
+    if (score >= 30 && !magnetUsed && !magnetAvailable) {
+      magnetAvailable = true;
+    }
   }
 
   void activateMagnet() {
-    if (!magnetAvailable) return;
+    if (!magnetAvailable || magnetUsed) return;
     isMagnetActive = true;
     magnetAvailable = false;
+    magnetUsed = true; // ✅ Only allow once per full game
+
     final center = Offset(
       MediaQuery.of(context).size.width / 2,
       MediaQuery.of(context).size.height / 2,
@@ -422,7 +345,7 @@ class GameController {
         barrierDismissible: false,
         builder: (_) => AlertDialog(
           backgroundColor: Color(0xff4b8d99),
-          title: const Text('❌ Level Failed',style: TextStyle(color: Colors.white),),
+          title: const Text('❌ Level Failed',style: TextStyle(color: Colors.white,fontSize: 15),),
           content: getMissingFishWidget(missingFish),
           actions: [
             TextButton(
@@ -520,125 +443,187 @@ class GameController {
 
   Widget buildGameUI() {
     return Scaffold(
-      body: Stack(
-        children: [
-          Positioned.fill(child: Image.asset(bgAsset, fit: BoxFit.cover)),
-          for (var f in leftFishes) FishWidget(fish: f, blastGif: blastGif),
-          for (var f in rightFishes) FishWidget(fish: f, blastGif: blastGif),
-          for (var m in missiles)
-            MissileWidget(missile: m, missileAsset: missileAsset),
-          for (var ca in coinAnimations)
-            CoinAnimationWidget(coinAnim: ca, coinImage: coinAsset),
-          for (var net in nets)
-            Positioned(
-              left: net.center.dx - net.radius,
-              top: net.center.dy - net.radius,
-              child: Image.asset(
-                netAsset,
-                width: net.radius * 2,
-                height: net.radius * 2,
-              ),
-            ),
-          Positioned(
-            top: 10,
-            left: 20,
-            child: Text(
-              'Score: $score / $requiredScore',
-              style: TextStyle(color: Colors.white, fontSize: 16),
-            ),
-          ),
-          Positioned(
-            top: 10,
-            left: 160,
-            child: Text(
-              'Level: $level',
-              style: TextStyle(color: Colors.white, fontSize: 16),
-            ),
-          ),
-          Positioned(
-            top: 10,
-            right: 20,
-            child: Text(
-              '⏱ $timeLeft',
-              style: TextStyle(
-                color: timeLeft <= 10 ? Colors.red : Colors.white,
-                fontSize: 16,
-              ),
-            ),
-          ),
-          Positioned(
-            top: 40,
-            left: 20,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        automaticallyImplyLeading: false,
+        toolbarHeight: 0,
+        bottom: PreferredSize(
+            preferredSize: Size(300, 50),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: currentFishTarget.entries.map((e) {
-                final have = fishCollected[e.key] ?? 0;
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      'assets/images/${e.key}',
-                      width: 30,
-                      height: 35,
-                      fit: BoxFit.fill,
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      '$have / ${e.value}',
-                      style: TextStyle(
-                        color: have >= e.value ? Colors.greenAccent : Colors.white,
-                        fontSize: 16,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [ //
+            Container(
+              height: height*0.12,
+              width: width*0.13,
+                decoration: BoxDecoration(
+                    image: DecorationImage(image: AssetImage("assets/images/score.png"),fit: BoxFit.fill)
+                ),
+              child: Row(
+                children: [
+                  SizedBox(width: width*0.01),
+                  Image.asset(coinImage, height: 30),
+                  Text(
+                    ' $score / $requiredScore',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              height: height*0.12,
+              width: width*0.13,
+                 margin: EdgeInsets.symmetric(horizontal: 10),
+               decoration: BoxDecoration(
+                    image: DecorationImage(image: AssetImage("assets/images/level.png"),fit: BoxFit.fill)
+                 ),
+              child: Center(
+                child: Text(
+                  'Level: $level',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ),
+            ),
+            Container(
+              height: height*0.12,
+              width: width*0.1,
+              decoration: BoxDecoration(
+                  image: DecorationImage(image: AssetImage("assets/images/score.png"),fit: BoxFit.fill)
+              ),
+              child: Center(
+                child: Text(
+                  '⏱ $timeLeft',
+                  style: TextStyle(
+                    color: timeLeft <= 10 ? Colors.red : Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              height: height*0.12,
+              width: width*0.24,
+              decoration: BoxDecoration(
+                  image: DecorationImage(image: AssetImage("assets/images/score.png"),fit: BoxFit.fill)
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: currentFishTarget.entries.map((e) {
+                  final have = fishCollected[e.key] ?? 0;
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/images/${e.key}',
+                        width: 30,
+                        height: 35,
+                        fit: BoxFit.fill,
+                      ),
+                      SizedBox(width: width*0.01,),
+                      Text(
+                        '$have / ${e.value}',
+                        style: TextStyle(
+                          color: have >= e.value ? Colors.greenAccent : Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
+            if (magnetAvailable && !isMagnetActive && !magnetUsed)
+              GestureDetector(
+                onTap: activateMagnet,
+                child: Icon(Icons.star, color: Colors.amber, size: 30),
+              ),
+            Row(
+              children: [
+                InkWell(
+                    onTap:(){
+                      isMusicOn = !isMusicOn;
+                          if (isMusicOn) {
+                            print("dguedu");
+                            audio. play(AssetSource(musicAsset));
+                          } else {
+                            print("stop sound");
+                            audio.stop();
+                          }
+                      print("wdugwigdw");
+                    },
+                    child: Container(
+                      height: height*0.1,
+                      width: width*0.05,
+                      margin: EdgeInsets.symmetric(horizontal: 10),
+                      decoration: BoxDecoration(
+                          image: DecorationImage(image: AssetImage(isMusicOn ?"assets/images/musicon.png":"assets/images/musicoff.png"),fit: BoxFit.fill)
                       ),
                     ),
-                  ],
-                );
-              }).toList(),
-            ),
-          ),
-          if (magnetAvailable && !isMagnetActive)
-            Positioned(
-              bottom: 100,
-              right: 20,
-              child: GestureDetector(
-                onTap: activateMagnet,
-                child: Icon(Icons.star, color: Colors.amber, size: 60),
-              ),
-            ),
-          Positioned(
-            top: 10,
-            right: 80,
-            child: Row(
-              children: [
-                IconButton(
-                  icon: Icon(
-                    isSoundOn ? Icons.volume_up : Icons.volume_off,
-                    color: Colors.white,
                   ),
-                  onPressed: () => isSoundOn = !isSoundOn,
-                ),
-                IconButton(
-                  icon: Icon(
-                    isMusicOn ? Icons.music_note : Icons.music_off,
-                    color: Colors.white,
+                InkWell(
+                    onTap: (){
+                      Navigator.of(context).pop();
+                    },
+                    child: Container(
+                      height: height*0.1,
+                      width: width*0.05,
+                      margin: EdgeInsets.symmetric(horizontal: 10),
+                      decoration: BoxDecoration(
+                          image: DecorationImage(image: AssetImage("assets/images/menu.png"),fit: BoxFit.fill)
+                      ),
+                    ),
                   ),
-                  onPressed: () {
-                    isMusicOn = !isMusicOn;
-                    if (isMusicOn) {
-                      audio.playBackgroundMusic(musicAsset);
-                    } else {
-                      audio.stopBackgroundMusic();
-                    }
-                  },
-                ),
               ],
             ),
+          ],
+        )),
+      ),
+      body: Container(
+        height: double.infinity,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(bgAsset),
+            fit: BoxFit.fill,
           ),
-          Positioned.fill(
-            child: GestureDetector(
-              onTapDown: (d) => fireMissile(d.localPosition),
+        ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            for (var f in leftFishes) FishWidget(fish: f, blastGif: blastGif),
+            for (var f in rightFishes) FishWidget(fish: f, blastGif: blastGif),
+            for (var m in missiles)
+              MissileWidget(missile: m, missileAsset: missileAsset),
+            for (var ca in coinAnimations)
+              CoinAnimationWidget(coinAnim: ca, coinImage: coinAsset),
+            for (var net in nets)
+              Positioned(
+                left: net.center.dx - net.radius,
+                top: net.center.dy - net.radius,
+                child: Image.asset(
+                  netAsset,
+                  width: net.radius * 2,
+                  height: net.radius * 2,
+                ),
+              ),
+           Positioned(
+              bottom: -50,
+              left: 45,
+              right: 45,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Image.asset(missileAsset, height: 100),
+              ),
             ),
-          ),
-        ],
+            Positioned.fill(
+              child: GestureDetector(
+                onTapDown: (d) => fireMissile(d.localPosition),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

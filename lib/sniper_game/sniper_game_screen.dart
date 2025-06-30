@@ -1,3 +1,4 @@
+import 'package:fish_game/main.dart';
 import 'package:flutter/material.dart';
 import 'game_controller.dart';
 
@@ -31,8 +32,8 @@ class _SniperGameScreenState extends State<SniperGameScreen> with TickerProvider
       builder: (_) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: Color(0xff4b8d99),
-        child: Container(
-          width: 300,
+        child: SizedBox(
+          width: width*0.06,
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -46,13 +47,13 @@ class _SniperGameScreenState extends State<SniperGameScreen> with TickerProvider
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 16),
+                 SizedBox(height: height*0.04),
 
                 // Score
                 Row(
                   children: [
                     Icon(Icons.star, color: Colors.amber),
-                    const SizedBox(width: 8),
+                    SizedBox(width: width*0.02),
                     Text(
                       'Required Score: $requiredScore',
                       style: TextStyle(fontSize: 16,color: Colors.white),
@@ -61,11 +62,11 @@ class _SniperGameScreenState extends State<SniperGameScreen> with TickerProvider
                 ),
 
                 // Time
-                const SizedBox(height: 8),
+                SizedBox(height: height*0.03),
                 Row(
                   children: [
                     Icon(Icons.timer, color: Colors.redAccent),
-                    const SizedBox(width: 8),
+                    SizedBox(width: width*0.02),
                     Text(
                       'Time Limit: $timeLimit sec',
                       style: TextStyle(fontSize: 16,color: Colors.white),
@@ -79,7 +80,7 @@ class _SniperGameScreenState extends State<SniperGameScreen> with TickerProvider
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      '🐟 Fish Target:',
+                      'Fish Target:',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -87,7 +88,7 @@ class _SniperGameScreenState extends State<SniperGameScreen> with TickerProvider
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: height*0.03),
                   Row(
                     children: [
                       for (var entry in fishTarget.entries)
@@ -100,7 +101,7 @@ class _SniperGameScreenState extends State<SniperGameScreen> with TickerProvider
                               height: 50,
                               fit: BoxFit.fill,
                             ),
-                            const SizedBox(width: 10),
+                            SizedBox(width: width*0.02),
                             Text(
                               '${entry.value}',
                               style: TextStyle(fontSize: 15,color: Colors.white),
@@ -112,7 +113,7 @@ class _SniperGameScreenState extends State<SniperGameScreen> with TickerProvider
 
                 ],
 
-                const SizedBox(height: 20),
+                SizedBox(height: height*0.035),
                 ElevatedButton.icon(
                   onPressed: (){
                       Navigator.pop(context);

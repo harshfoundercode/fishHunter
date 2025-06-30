@@ -1,3 +1,4 @@
+import 'package:fish_game/main.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'sniper_game_screen.dart';
@@ -26,7 +27,7 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
   }
 
   void _onLevelTap(int level) {
-    Navigator.pop(context); // Close the popup
+    Navigator.pop(context);
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => SniperGameScreen(startLevel: level)),
@@ -39,8 +40,8 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
       backgroundColor:Color(0xff4b8d99),
       title: const Text("Select Level", textAlign: TextAlign.center,style: TextStyle(color: Colors.white),),
       content: SizedBox(
-        width: 400,
-        height: 100,
+        width: width*0.5,
+        height: height*0.25,
         child: GridView.builder(
           itemCount: 10,
           shrinkWrap: true,
@@ -51,12 +52,12 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
               onTap: lvl <= unlockedLevel ? () => _onLevelTap(lvl) : null,
               child: Center(
                 child: Container(
-                  width: 50,
+                  width: width*0.07,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     color: lvl <= unlockedLevel ? Color(0xffabdbda) : Colors.grey.shade400,
                   ),
-                  child: Center(child: Text('$lvl')),
+                  child: Center(child: Text('$lvl',style: TextStyle(color: Colors.white))),
                 ),
               ),
             );

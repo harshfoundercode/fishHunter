@@ -5,7 +5,7 @@ class AudioHelper {
 
   Future<void> playSoundEffect(String assetPath) async {
     try {
-      await _player.play(AssetSource(assetPath)); // ✅ Correct usage
+      await _player.play(AssetSource(assetPath));
     } catch (e) {
       print('Audio Error: $e');
     }
